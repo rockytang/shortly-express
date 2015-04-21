@@ -77,7 +77,6 @@ function(req, res) {
 
         link.save().then(function(newLink) {
           Links.add(newLink);
-          console.log("inside link.save()- newLink: ", newLink)
           res.send(200, newLink);
         });
       });
@@ -100,7 +99,6 @@ app.post('/signup', function(req, res) {
   newUser.save().then(function(newUser){
     Users.add(newUser);
     console.log("added new user: ", newUser);
-    console.log("Users collection: ", Users);
     res.redirect('/login');
   })
 
@@ -111,7 +109,6 @@ app.post('/login', function(req, res) {
   new User({ username: req.body.username}).fetch()
     .then(function(found) {
       console.log('found it', found.attributes);
-      console.log('password: ', found.attributes.password);
 
       if(bcrypt.compareSync(req.body.password,
         found.attributes.password)){

@@ -15,12 +15,11 @@ var Link = require('../app/models/link');
 /************************************************************/
 var xbeforeEach = function(){};
 /************************************************************/
-// only uncheck one 'x' on beforeEach at a time!
-// keep 'x's on all other ones!
+
 
 describe('', function() {
 
-  xbeforeEach(function() {
+  beforeEach(function() {
     // log out currently signed in user
     request('http://127.0.0.1:4568/logout', function(error, res, body) {});
 
@@ -64,7 +63,7 @@ describe('', function() {
 
     var requestWithSession = request.defaults({jar: true});
 
-    beforeEach(function(done){      // create a user that we can then log-in with
+    xbeforeEach(function(done){      // create a user that we can then log-in with
       new User({
           'username': 'Phillip',
           'password': 'Phillip'
@@ -101,7 +100,7 @@ describe('', function() {
       });
     });
 
-    xdescribe('Shortening links:', function(){
+    describe('Shortening links:', function(){
 
       var options = {
         'method': 'POST',
@@ -154,11 +153,11 @@ describe('', function() {
 
       var link;
 
-      xbeforeEach(function(done){
+      beforeEach(function(done){
         // save a link to the database
         link = new Link({
           url: 'http://www.roflzoo.com/',
-          title: 'Rofl Zoo - Daily funny animal pictures',
+          title: 'Funny pictures of animals, funny dog pictures',
           base_url: 'http://127.0.0.1:4568'
         });
         link.save().then(function(){
@@ -191,7 +190,7 @@ describe('', function() {
 
         requestWithSession(options, function(error, res, body) {
           var currentLocation = res.request.href;
-          expect(currentLocation).to.equal('http://www.roflzoo.com/');
+          expect(currentLocation).to.equal('http://roflzoo.com/');
           done();
         });
       });
@@ -203,7 +202,7 @@ describe('', function() {
         };
 
         requestWithSession(options, function(error, res, body) {
-          expect(body).to.include('"title":"Rofl Zoo - Daily funny animal pictures"');
+          expect(body).to.include('"title":"Funny pictures of animals, funny dog pictures"');
           expect(body).to.include('"code":"' + link.get('code') + '"');
           done();
         });
