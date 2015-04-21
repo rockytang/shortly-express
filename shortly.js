@@ -2,7 +2,7 @@ var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
-
+var bcrypt = require('bcrypt-nodejs');
 
 var db = require('./app/config');
 var Users = require('./app/collections/users');
@@ -88,37 +88,38 @@ function(req, res) {
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/
-app.post('/signup',
-function(req, res) {
+app.post('/signup', function(req, res) {
+  var salt = bcrypt.genSaltSync(10);
+  var hash = bcrypt.hashSync(req.body.password, salt);
+
   var newUser = new User({
     'username': req.body.username,
-    'password': req.body.password
+    'password': hash
   });
-  Users.add(newUser);
-  console.log(req.body.username)
-  console.log(req.body.password)
 
-  res.render('login')
-/*
-  newUser.save().then(function(newUser) {
+  newUser.save().then(function(newUser){
     Users.add(newUser);
-    console.log("inside new User: ", newUser)
-    // res.send(200, newUser);
+    console.log("added new user: ", newUser);
+    console.log("Users collection: ", Users);
+    res.redirect('/login');
+  })
 
-  });*/
 });
 
 app.post('/login', function(req, res) {
 
-  console.log(req.body.username)
-  console.log(req.body.password)
-
   new User({ username: req.body.username}).fetch()
     .then(function(found) {
-      console.log('found it', found);
-        // res.send(200, found.attributes);
-    })
+      console.log('found it', found.attributes);
+      console.log('password: ', found.attributes.password);
 
+      if(bcrypt.compareSync(req.body.password,
+        found.attributes.password)){
+        res.redirect('/');
+      } else {
+        res.redirect('/login');
+      }
+    })
 });
 
 /************************************************************/
