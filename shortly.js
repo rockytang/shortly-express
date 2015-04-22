@@ -12,6 +12,8 @@ var Link = require('./app/models/link');
 var Click = require('./app/models/click');
 
 var app = express();
+var session = require('express-session');
+var cookieParser = require('cookie-parser');
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
@@ -22,8 +24,9 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
+app.use(session({secret: '1234567890QWERTY'}));
 
-app.get('/',
+app.get('/', util.checkUser,
 function(req, res) {
   res.render('index');
 });
@@ -33,24 +36,30 @@ function(req, res) {
   res.render('login');
 });
 
+app.get('/logout',
+function(req, res) {
+  req.session.user = false;
+  res.render('logout');
+});
+
 app.get('/signup',
 function(req, res) {
   res.render('signup');
 });
 
-app.get('/create',
+app.get('/create', util.checkUser,
 function(req, res) {
   res.render('index');
 });
 
-app.get('/links',
+app.get('/links', util.checkUser,
 function(req, res) {
   Links.reset().fetch().then(function(links) {
     res.send(200, links.models);
   });
 });
 
-app.post('/links',
+app.post('/links', util.checkUser,
 function(req, res) {
   var uri = req.body.url;
 
@@ -99,19 +108,23 @@ app.post('/signup', function(req, res) {
   newUser.save().then(function(newUser){
     Users.add(newUser);
     console.log("added new user: ", newUser);
-    res.redirect('/login');
+    req.session.user = newUser;
+    res.redirect('/');
   })
 
 });
 
 app.post('/login', function(req, res) {
-
+  //console.log(req.session);
   new User({ username: req.body.username}).fetch()
-    .then(function(found) {
-      console.log('found it', found.attributes);
+    .then(function(found){
+      console.log( 'found it', found.attributes);
 
       if(bcrypt.compareSync(req.body.password,
         found.attributes.password)){
+        req.session.user = found;
+        //req.session.user = req.body.username;
+        console.log('req session: ',req.session);
         res.redirect('/');
       } else {
         res.redirect('/login');
@@ -149,3 +162,4 @@ app.get('/*', function(req, res) {
 
 console.log('Shortly is listening on 4568');
 app.listen(4568);
+

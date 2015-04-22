@@ -6,6 +6,7 @@ var Users = require('../app/collections/users');
 var User = require('../app/models/user');
 var Links = require('../app/collections/links');
 var Link = require('../app/models/link');
+var bcrypt = require('bcrypt-nodejs');
 
 /************************************************************/
 // Mocha doesn't have a way to designate pending before blocks.
@@ -40,10 +41,10 @@ describe('', function() {
       .del()
       .catch(function(error) {
         // uncomment when writing authentication tests
-        // throw {
-        //   type: 'DatabaseError',
-        //   message: 'Failed to create test setup data'
-        // };
+        throw {
+          type: 'DatabaseError',
+          message: 'Failed to create test setup data'
+        };
       });
 
     // delete user Phillip from db so it can be created later for the test
@@ -52,10 +53,10 @@ describe('', function() {
       .del()
       .catch(function(error) {
         // uncomment when writing authentication tests
-        // throw {
-        //   type: 'DatabaseError',
-        //   message: 'Failed to create test setup data'
-        // };
+        throw {
+          type: 'DatabaseError',
+          message: 'Failed to create test setup data'
+        };
       });
   });
 
@@ -63,11 +64,15 @@ describe('', function() {
 
     var requestWithSession = request.defaults({jar: true});
 
-    xbeforeEach(function(done){      // create a user that we can then log-in with
+    beforeEach(function(done){
+    var salt = bcrypt.genSaltSync(10);
+    var hash = bcrypt.hashSync('Phillip', salt);   // create a user that we can then log-in with
       new User({
           'username': 'Phillip',
-          'password': 'Phillip'
+          'password': hash
+
       }).save().then(function(){
+
         var options = {
           'method': 'POST',
           'followAllRedirects': true,
@@ -212,7 +217,7 @@ describe('', function() {
 
   }); // 'Link creation'
 
-  xdescribe('Priviledged Access:', function(){
+  describe('Priviledged Access:', function(){
 
     it('Redirects to login page if a user tries to access the main page and is not signed in', function(done) {
       request('http://127.0.0.1:4568/', function(error, res, body) {
@@ -288,11 +293,12 @@ describe('', function() {
   xdescribe('Account Login:', function(){
 
     var requestWithSession = request.defaults({jar: true});
-
+    var salt = bcrypt.genSaltSync(10);
+    var hash = bcrypt.hashSync('Phillip', salt);
     beforeEach(function(done){
       new User({
           'username': 'Phillip',
-          'password': 'Phillip'
+          'password': hash
       }).save().then(function(){
         done()
       });
